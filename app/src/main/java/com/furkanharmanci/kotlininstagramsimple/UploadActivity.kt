@@ -15,6 +15,11 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.furkanharmanci.kotlininstagramsimple.databinding.ActivityUploadBinding
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import java.util.UUID
 
 class UploadActivity : AppCompatActivity() {
     private lateinit var binding: ActivityUploadBinding
@@ -22,6 +27,8 @@ class UploadActivity : AppCompatActivity() {
     private lateinit var permissionResultLauncher : ActivityResultLauncher<String>
     private var selectedPicUri : Uri? = null
     private var imageProvider = Manifest.permission.READ_MEDIA_IMAGES
+    private lateinit var auth : FirebaseAuth
+    private lateinit var firestoreDatabase : FirebaseFirestore
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,6 +36,10 @@ class UploadActivity : AppCompatActivity() {
         binding = ActivityUploadBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
+
+        // firebase modules initialize
+        auth = FirebaseAuth.getInstance()
+        firestoreDatabase = FirebaseFirestore.getInstance()
         registerLauncher()
     }
 
@@ -78,6 +89,43 @@ class UploadActivity : AppCompatActivity() {
     }
 
     fun uploadButton(view: View) {
+        val storage = FirebaseStorage.getInstance()
+        val reference = storage.reference
+        val uuid = UUID.randomUUID() // rastgele benzersiz id
+        val imageName = "$uuid.jpg"
+        val imageReference = reference.child("images").child(imageName) // reference.child("images/image.jpg") de olur.
 
+        if (selectedPicUri != null) {
+            imageReference.putFile(selectedPicUri!!)
+                .addOnSuccessListener {
+                    // download url -> firestore
+                    val uploadPictureReference = storage.reference.child("images").child(imageName)
+                    uploadPictureReference.downloadUrl
+                        .addOnSuccessListener {
+                            val downloadUrl = it.toString() // download url alındı
+
+                            if (auth.currentUser != null) {
+                                val postMap = hashMapOf<String, Any>()
+                                postMap["downloadUrl"] = downloadUrl
+                                postMap["useremail"] = auth.currentUser!!.email!!
+                                postMap["comment"] = binding.comment.text.toString()
+                                postMap["date"] = Timestamp.now()
+
+                                firestoreDatabase.collection("Posts")
+                                    .add(postMap)
+                                    .addOnSuccessListener {
+                                        finish()
+                                    }
+                                    .addOnFailureListener {
+                                        Toast.makeText(this@UploadActivity, it.localizedMessage, Toast.LENGTH_LONG).show()
+                                    }
+                            }
+                        }
+
+                }
+                .addOnFailureListener {
+                    Toast.makeText(this@UploadActivity, it.localizedMessage, Toast.LENGTH_LONG).show()
+                }
+        }
     }
 }

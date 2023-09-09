@@ -7,7 +7,7 @@
     tools:context=".UploadActivity">
 
     <ImageView
-        android:id="@+id/imageView"
+        android:id="@+id/imagePicker"
         android:layout_width="270dp"
         android:layout_height="270dp"
         android:layout_marginTop="20dp"
@@ -27,7 +27,7 @@
         android:inputType="textPersonName"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView" />
+        app:layout_constraintTop_toBottomOf="@+id/imagePicker" />
 
     <Button
         android:id="@+id/upload"
