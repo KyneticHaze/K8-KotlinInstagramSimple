@@ -1,4 +1,4 @@
-package com.furkanharmanci.kotlininstagramsimple
+package com.furkanharmanci.kotlininstagramsimple.view
 
 import android.Manifest
 import android.content.Intent
@@ -101,8 +101,8 @@ class UploadActivity : AppCompatActivity() {
                     // download url -> firestore
                     val uploadPictureReference = storage.reference.child("images").child(imageName)
                     uploadPictureReference.downloadUrl
-                        .addOnSuccessListener {
-                            val downloadUrl = it.toString() // download url alındı
+                        .addOnSuccessListener { uri ->
+                            val downloadUrl = uri.toString() // download url alındı
 
                             if (auth.currentUser != null) {
                                 val postMap = hashMapOf<String, Any>()
